@@ -515,6 +515,7 @@ typedef struct goxel
 
     tool_t     *tool;
     float      tool_radius;
+    float      tool_offset_distance;
     bool       pathtrace; // Render pathtraced mode.
 
     struct {

@@ -181,6 +181,16 @@ int tool_gui_smoothness(void)
     return 0;
 }
 
+int tool_gui_offset_distance(void)
+{
+    int i;
+    i = goxel.tool_offset_distance;
+    if (gui_input_int(_("Offset"), &i, 0, 0)) {
+        goxel.tool_offset_distance = i;
+    }
+    return 0;
+}
+
 int tool_gui_color(void)
 {
     float alpha;

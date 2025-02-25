@@ -64,7 +64,7 @@ struct gesture3d
     int         user_key;
     const char  *name; // For debug only.
 
-    // Need to be updated manually at each frame for each gestures.
+    // Need to be updated manually at each frame for each gesture.
     float       pos[3];
     float       normal[3];
     int         snaped;

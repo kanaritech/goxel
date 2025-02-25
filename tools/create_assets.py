@@ -75,13 +75,15 @@ def list_files(group):
     for root, dirs, files in os.walk("data/%s" % group):
         for f in files:
             if any(f.endswith('.' + x) for x in TYPES):
-                ret.append(os.path.join(root, f))
+                ret.append(os.path.join(root, f).replace('\\', '/'))
     return sorted(ret, key=lambda x: x.upper())
 
 def encode_str(data):
     data = data.decode()
     ret = '    "'
     for c in data:
+        if c == '\r':
+            continue
         if c == '\n':
             ret += '\\n"\n    "'
             continue
@@ -100,7 +102,7 @@ def encode_bin(data):
             ret += "    " + line + "\n"
             line = ""
     ret += "}"
-    return ret;
+    return ret
 
 def create_file(f):
     data = open(f, 'rb').read()
@@ -115,7 +117,8 @@ def create_file(f):
     return File(f, name, data, size)
 
 
-for group in GROUPS:
+# for group in GROUPS:
+for group in ['scripts']:
     files = []
     for f in list_files(group):
         files.append(create_file(f))

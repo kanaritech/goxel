@@ -87,6 +87,7 @@ int tool_gui_mask_mode(int *value);
 int tool_gui_shape(const shape_t **shape);
 int tool_gui_radius(void);
 int tool_gui_smoothness(void);
+int tool_gui_offset_distance(void);
 int tool_gui_color(void);
 
 #endif // TOOLS_H

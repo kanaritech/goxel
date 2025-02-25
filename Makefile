@@ -1,75 +1,50 @@
-SHELL = bash
-ifeq ($(OS),Linux)
-	JOBS := "-j $(shell nproc)"
-else
-	JOBS := "-j $(shell getconf _NPROCESSORS_ONLN)"
+CC := gcc
+CXX := g++
+# LD := /ucrt64/bin/ld
+WIN_LIBS := -lglfw3 -lopengl32 -lz /mingw64/lib/libtre.a -lgdi32 -lcomdlg32 -lole32 -luuid -lshell32
+
+# -DGLEW_STATIC
+CFLAGS := -std=gnu99 -Wall -DGLEW_STATIC
+CXXFLAGS := -std=gnu++17 -Wall -Wno-unknown-pragma -Wno-unknown-warning-option -DGLEW_STATIC
+# LDFLAGS := -L/ucrt64/lib
+LIBS := $(WIN_LIBS)
+
+# Configuración del modo de compilación
+MODE ?= debug
+ifeq ($(MODE), debug)
+    CFLAGS += -O0 -g
+    CXXFLAGS += -O0 -g
+else ifeq ($(MODE), release)
+    CFLAGS += -O3 -DNDEBUG
+    CXXFLAGS += -O3 -DNDEBUG
+else ifeq ($(MODE), profile)
+    CFLAGS += -g
+    CXXFLAGS += -g
 endif
 
-.ONESHELL:
+# Configuración de bibliotecas y rutas de inclusión
+INCLUDES := -Isrc -Iext_src -Iext_src/glew -Iext_src/uthash -Iext_src/stb -Iext_src/nfd -Iext_src/noc -Iext_src/xxhash -Iext_src/meshoptimizer -I/mingw64/include -I/mingw64/include/tre
 
-all: .FORCE
-	scons $(JOBS)
+# Detectar archivos fuente automáticamente
+SOURCES := $(shell find src -type f \( -name "*.c" -o -name "*.cpp" \)) ext_src/nfd/nfd_win.cpp ext_src/glew/glew.c
+OBJECTS := $(SOURCES:.c=.o)
+OBJECTS := $(OBJECTS:.cpp=.o)
 
-release:
-	scons $(JOBS) mode=release
+# Binario final
+TARGET := goxel.exe
 
-profile:
-	scons $(JOBS) mode=profile
+# Regla principal
+all: $(TARGET)
 
-run:
-	./goxel
+$(TARGET): $(OBJECTS)
+	$(CXX) $(LDFLAGS) $^ -o $@ $(LIBS)
 
-clean: .FORCE
-	scons -c
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-analyze:
-	scan-build scons mode=analyze
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
-# For the moment only apply the format to uncommited changes.
-format: .FORCE
-	git clang-format -f
-
-
-# Generate an AppImage.  Used by github CI.
-appimage: .FORCE
-	scons mode=release nfd_backend=portal
-	rm -rf AppDir
-	mkdir AppDir
-	DESTDIR=AppDir PREFIX=/usr make install
-	curl https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20231206-1/linuxdeploy-x86_64.AppImage \
-		--output linuxdeploy.AppImage -L -f
-	chmod +x linuxdeploy.AppImage
-	./linuxdeploy.AppImage --output=appimage --appdir=AppDir
-
-# Targets to install/uninstall goxel and its data files on unix system.
-PREFIX ?= /usr/local
-
-.PHONY: install
-install:
-	install -Dm755 goxel $(DESTDIR)$(PREFIX)/bin/goxel
-	for size in 16 24 32 48 64 128 256; do
-	    install -Dm644 data/icons/icon$${size}.png \
-	        $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/icons/hicolor/ \
-	            $${size}x$${size}/apps/goxel.png)
-	done
-	install -Dm644 snap/gui/goxel.desktop \
-	    $(DESTDIR)$(PREFIX)/share/applications/goxel.desktop
-	install -Dm644 \
-	    snap/gui/io.github.guillaumechereau.Goxel.metainfo.xml \
-	    $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/metainfo/ \
-	        io.github.guillaumechereau.Goxel.metainfo.xml)
-
-.PHONY: uninstall
-uninstall:
-	rm -f $(DESTDIR)$(PREFIX)/bin/goxel
-	for size in 16 24 32 48 64 128 256; do \
-	    rm -f $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/icons/hicolor/ \
-	        $${size}x$${size}/apps/goxel.png)
-	done
-	rm -f $(DESTDIR)$(PREFIX)/share/applications/goxel.desktop
-	rm -f $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/metainfo/ \
-	         io.github.guillaumechereau.Goxel.metainfo.xml)
-
-.PHONY: all
-
-.FORCE:
+# Limpieza de archivos generados
+clean:
+	rm -f $(OBJECTS) $(TARGET)

@@ -28,6 +28,8 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#include "log.h"
+
 #ifndef PATH_MAX
 #define PATH_MAX 1024
 #endif

@@ -724,6 +724,8 @@ static void gui_iter(const inputs_t *inputs)
         if (goxel.tool_radius != last_tool_radius) {
             goxel.tool_radius = clamp(goxel.tool_radius, 0.5, 64);
         }
+        if (isCharPressed('{')) goxel.tool_offset_distance -= 1.0;
+        if (isCharPressed('}')) goxel.tool_offset_distance += 1.0;
         actions_iter(check_action_shortcut, NULL);
     }
     ImGui::EndFrame();

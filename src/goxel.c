@@ -525,6 +525,7 @@ void goxel_reset(void)
 
     action_exec2(ACTION_tool_set_brush);
     goxel.tool_radius = 0.5;
+    goxel.tool_offset_distance = 0.0;
     goxel.painter = (painter_t) {
         .shape = &shape_cube,
         .mode = MODE_OVER,

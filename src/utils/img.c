@@ -18,6 +18,8 @@
 
 #include "img.h"
 
+#include "log.h"
+
 #include <stdbool.h>
 
 #ifndef HAVE_LIBPNG

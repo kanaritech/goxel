@@ -41,10 +41,9 @@ if target_os == 'posix':
 env = Environment(variables=vars, ENV=os.environ)
 conf = env.Configure()
 
-if "MSYSTEM" in os.environ:
-    target_os = "msys"
-
-print(f"target_os: {target_os}")
+# if "MSYSTEM" in os.environ:
+#     target_os = "msys"
+# print(f"target_os: {target_os}")
 
 if env['mode'] == 'analyze':
     # Make sure clang static analyzer has a chance to override de compiler

@@ -189,7 +189,13 @@ static int on_hover(gesture3d_t *gest)
     if (goxel.tool_volume && check_can_skip(brush, gest, painter->mode))
         return 0;
 
-    get_box(gest->pos, NULL, gest->normal, goxel.tool_radius, NULL, box);
+    float offseted_pos[3];
+    vec3_copy(gest->pos, offseted_pos);
+    offseted_pos[0] += gest->normal[0] * goxel.tool_offset_distance;
+    offseted_pos[1] += gest->normal[1] * goxel.tool_offset_distance;
+    offseted_pos[2] += gest->normal[2] * goxel.tool_offset_distance;
+    
+    get_box(offseted_pos, NULL, gest->normal, goxel.tool_radius, NULL, box);
 
     if (!goxel.tool_volume) goxel.tool_volume = volume_new();
     volume_set(goxel.tool_volume, volume);
@@ -246,6 +252,7 @@ static int gui(tool_t *tool)
     tool_gui_color();
     tool_gui_radius();
     tool_gui_smoothness();
+    tool_gui_offset_distance();
     tool_gui_shape(NULL);
     return 0;
 }
