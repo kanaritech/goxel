@@ -41,6 +41,11 @@ if target_os == 'posix':
 env = Environment(variables=vars, ENV=os.environ)
 conf = env.Configure()
 
+if "MSYSTEM" in os.environ:
+    target_os = "msys"
+
+print(f"target_os: {target_os}")
+
 if env['mode'] == 'analyze':
     # Make sure clang static analyzer has a chance to override de compiler
     # and set CCC settings
@@ -64,13 +69,12 @@ if env['mode'] == 'debug' and target_os == 'posix':
 # CFLAGS    : only C
 # CXXFLAGS  : only C++
 env.Append(
-    CFLAGS=['-std=gnu99', '-Wall',
-            '-Wno-unknow-pragma', '-Wno-unknown-warning-option'],
-    CXXFLAGS=['-std=gnu++17', '-Wall', '-Wno-narrowing']
+    CFLAGS=['-std=gnu99', '-Wall'],
+    CXXFLAGS=['-std=gnu++17', '-Wall', '-Wno-unknown-pragma', '-Wno-unknown-warning-option']
 )
 
 if env['werror']:
-    env.Append(CCFLAGS='-Werror')
+    env.Append(CCFLAGS='-Werror' if target_os != 'msys' else '-WX')
 
 if env['mode'] not in ['debug', 'analyze']:
     env.Append(CPPDEFINES='NDEBUG', CCFLAGS='-O3')
@@ -113,9 +117,10 @@ if target_os == 'posix':
 
 # Windows compilation support.
 if target_os == 'msys':
+    env.Append(CCFLAGS=['/wd4191'])
     env.Append(CXXFLAGS=['-Wno-attributes', '-Wno-unused-variable',
-                         '-Wno-unused-function'])
-    env.Append(CCFLAGS=['-Wno-error=address']) # To remove if possible.
+                         '-Wno-unused-function', '/wd4191'])
+    # env.Append(CCFLAGS=['-Wno-error=address']) # To remove if possible.
     env.Append(LIBS=['glfw3', 'opengl32', 'z', 'tre', 'gdi32', 'Comdlg32',
                      'ole32', 'uuid', 'shell32'],
                LINKFLAGS='--static')
@@ -123,6 +128,8 @@ if target_os == 'msys':
     sources.append('ext_src/nfd/nfd_win.cpp')
     env.Append(CPPPATH=['ext_src/glew'])
     env.Append(CPPDEFINES=['GLEW_STATIC', 'FREE_WINDOWS'])
+else:
+    env.Append(CXXFLAGS=['-Wno-narrowing'])
 
 # OSX Compilation support.
 if target_os == 'darwin':
@@ -145,6 +152,35 @@ env.Append(CPPPATH=['ext_src/nfd'])
 env.Append(CPPPATH=['ext_src/noc'])
 env.Append(CPPPATH=['ext_src/xxhash'])
 env.Append(CPPPATH=['ext_src/meshoptimizer'])
+
+if target_os == 'msys':
+
+    ccflags = list(env['CCFLAGS'])
+    cxxflags = list(env['CXXFLAGS'])
+
+    # Reemplaza las banderas Windows por las Unix
+    ccflags = [flag.replace('/Fo', '-o')
+                .replace('/c', '-c')
+                .replace('/nologo', '')
+                .replace('/I', '-I')
+                .replace('/DGLEW_STATIC', '-DGLEW_STATIC')
+                .replace('/DFREE_WINDOWS', '-DFREE_WINDOWS')
+                for flag in ccflags]
+
+    cxxflags = [flag.replace('/Fo', '-o')
+                .replace('/c', '-c')
+                .replace('/nologo', '')
+                .replace('/I', '-I')
+                .replace('/DGLEW_STATIC', '-DGLEW_STATIC')
+                .replace('/DFREE_WINDOWS', '-DFREE_WINDOWS')
+                for flag in cxxflags]
+
+    # Reemplaza las flags en el entorno
+    env.Replace(CCFLAGS=ccflags)
+    env.Replace(CXXFLAGS=cxxflags)
+
+print(f"env['CCFLAGS']: {env['CCFLAGS']}")
+print(f"env['CXXFLAGS']: {env['CXXFLAGS']}")
 
 if env['sound']:
     env.Append(LIBS='openal')
